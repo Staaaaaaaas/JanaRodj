@@ -1,12 +1,14 @@
-
 let numBalls = 0;
 let spring = 0.05;
 let gravity = 0.03;
 let friction = -0.9;
 let balls = [];
+let points = [];
+let cnv;
 var socket = io();
 function setup() {
-  createCanvas(500, 500);
+  cnv = createCanvas(500, 500);
+  //frameRate(30);
 //   for (let i = 0; i < numBalls; i++) {
 //     balls[i] = new Ball(
 //       random(width),
@@ -17,41 +19,82 @@ function setup() {
 //     );
 //   }
   noStroke();
+  textSize(14);
+  textAlign(CENTER);
   //noCursor();
 }
 
 function draw() {
   background(250,221,225);
+  textSize(100);
+  noStroke();
+  fill("pink");
+  text(numBalls,width*0.5,height*0.55);
+  textSize(14);
+  displayChart();
   balls.forEach(ball => {
     ball.collide();
     ball.move();
     ball.display();
   });
+  
   //fill("#ff5d8f");
   //stroke(255);
   //circle(mouseX,mouseY,10);
 }
 function addBall(){
+  let bx = select("#msgBox").elt;
+  if(!bx.value)return;
   const sz = random(30,50);
   const x = random(width);
   const y = random(height);
-  socket.emit("new ball", [x,y,sz]);
+  socket.emit("new ball", [x,y,sz, bx.value]);
+  bx.value = "";
+  
 }
-socket.on('draw ball', (ball)=>{
+
+function removeBall(){
+  if(!numBalls)return;
+  socket.emit('kill ball');
+}
+
+function displayChart(){
+  if(!points.length)return;
+  let furthest = points[points.length-1][0];
+  //console.log(furthest);
+  stroke(0);
+  for(let i=0;i<points.length;i++){
+    let x = map(points[i][0],points[0][0],furthest,0,width-1);
+    let y = height-map(points[i][1],0,50,0,height-1);
+    
+    if(i){
+      
+      line(map(points[i-1][0],points[0][0],furthest,0,width-1),height-map(points[i-1][1],0,50,0,height-1),x,y);
+    }
+    
+    
+  }
+  noStroke();
+  fill("#ff87ab");
+  for(let i=0;i<points.length;i++){
+    let x = map(points[i][0],points[0][0],furthest,0,width-1);
+    let y = height-map(points[i][1],0,50,0,height-1);
+    circle(x,y,5);
+  }
+}
+socket.on('load chart', (newPoints)=>{
+  points=newPoints;
+});
+socket.on('new ball', (ball)=>{
   balls.push(new Ball(...ball, numBalls++, balls));
 });
-// function mousePressed(){
-// 	balls.push(new Ball(
-// 		mouseX,
-// 		mouseY,
-// 		random(30,70),
-// 		numBalls++,
-// 		balls
-// 	));
-// }
+socket.on('kill ball', ()=>{
+  balls.shift();
+  numBalls--;
+});
 
 class Ball {
-  constructor(xin, yin, din, idin, oin) {
+  constructor(xin, yin, din, txt, idin, oin) {
     this.x = xin;
     this.y = yin;
     this.vx = 0;
@@ -59,6 +102,7 @@ class Ball {
     this.diameter = din;
     this.id = idin;
     this.others = oin;
+    this.txt = txt;
   }
 
   collide() {
@@ -107,11 +151,14 @@ class Ball {
   }
 
   display() {
-	noStroke();
-	fill("#ff87ab");
-	circle(this.x-this.diameter/2.5,this.y,this.diameter);
-	circle(this.x+this.diameter/2.5,this.y,this.diameter);
-	triangle(this.x-this.diameter*0.87,this.y+0.2*this.diameter,this.x+this.diameter*0.87,this.y+0.2*this.diameter,this.x,this.y+1.2*this.diameter);
-    //ellipse(this.x, this.y, this.diameter, this.diameter);
+    noStroke();
+    fill("#ff87ab");
+    circle(this.x-this.diameter/2.5,this.y,this.diameter);
+    circle(this.x+this.diameter/2.5,this.y,this.diameter);
+    triangle(this.x-this.diameter*0.87,this.y+0.2*this.diameter,this.x+this.diameter*0.87,this.y+0.2*this.diameter,this.x,this.y+1.2*this.diameter);
+      //ellipse(this.x, this.y, this.diameter, this.diameter);
+    fill(255);
+    stroke(0);
+    text(this.txt,this.x,this.y);
   }
 }

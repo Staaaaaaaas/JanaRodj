@@ -9,6 +9,7 @@ const myArgs = process.argv.slice(2);
 
 
 let balls = [];
+let points = [[Date.now(),0]];
 
 
 let hostname = '104.248.227.135';
@@ -16,11 +17,20 @@ if(myArgs[0]=="-l")hostname='127.0.0.1';
 app.use(express.static('public'));
 io.on('connection', (socket)=>{
   balls.forEach((ball)=>{
-    socket.emit('draw ball', ball);
+    socket.emit('new ball', ball);
   });
+  socket.emit('load chart',points)
   socket.on('new ball', (ball)=>{
     balls.push(ball);
-    io.emit('draw ball', ball);
+    points.push([Date.now(),balls.length]);
+    socket.emit('load chart', points);
+    io.emit('new ball', ball);
+  });
+  socket.on('kill ball', ()=>{
+    balls.shift();
+    points.push([Date.now(),balls.length]);
+    socket.emit('load chart', points);
+    io.emit('kill ball');
   });
 });
 // app.get('/',(req,res)=>{
