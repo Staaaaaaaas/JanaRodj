@@ -23,13 +23,13 @@ io.on('connection', (socket)=>{
   socket.on('new ball', (ball)=>{
     balls.push(ball);
     points.push([Date.now(),balls.length]);
-    socket.emit('load chart', points);
+    io.emit('load chart', points);
     io.emit('new ball', ball);
   });
   socket.on('kill ball', ()=>{
     balls.shift();
     points.push([Date.now(),balls.length]);
-    socket.emit('load chart', points);
+    io.emit('load chart', points);
     io.emit('kill ball');
   });
 });

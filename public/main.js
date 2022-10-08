@@ -83,6 +83,7 @@ function displayChart(){
   }
 }
 socket.on('load chart', (newPoints)=>{
+  console.log(10);
   points=newPoints;
 });
 socket.on('new ball', (ball)=>{
