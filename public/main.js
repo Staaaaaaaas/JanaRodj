@@ -83,7 +83,7 @@ function displayChart(){
   }
 }
 socket.on('load chart', (newPoints)=>{
-  console.log(10);
+  
   points=newPoints;
 });
 socket.on('new ball', (ball)=>{
@@ -152,14 +152,20 @@ class Ball {
   }
 
   display() {
+    let dist = (mouseX-this.x)*(mouseX-this.x)+(mouseY-this.y)*(mouseY-this.y);
+    if(dist<=this.diameter*this.diameter)fill(255, (Date.now())%256, 171 );
+    else fill("#ff87ab");
     noStroke();
-    fill("#ff87ab");
     circle(this.x-this.diameter/2.5,this.y,this.diameter);
     circle(this.x+this.diameter/2.5,this.y,this.diameter);
     triangle(this.x-this.diameter*0.87,this.y+0.2*this.diameter,this.x+this.diameter*0.87,this.y+0.2*this.diameter,this.x,this.y+1.2*this.diameter);
       //ellipse(this.x, this.y, this.diameter, this.diameter);
-    fill(255);
-    stroke(0);
-    text(this.txt,this.x,this.y);
+    if(dist<=this.diameter*this.diameter){
+      stroke(0);
+      fill(255);
+      text(this.txt,this.x,this.y);
+    }
+    
+    
   }
 }
