@@ -62,20 +62,27 @@ function displayChart(){
   if(!points.length)return;
   let furthest = points[points.length-1][0];
   //console.log(furthest);
-  stroke(0);
-  for(let i=0;i<points.length;i++){
-    let x = map(points[i][0],points[0][0],furthest,0,width-1);
-    let y = height-map(points[i][1],0,50,0,height-1);
+  let x = map(points[0][0],points[0][0],furthest,0,width-1);
+  let y = height-map(points[0][1],0,50,0,height-1);
+  for(let i=1;i<points.length;i++){
     
-    if(i){
-      
-      line(map(points[i-1][0],points[0][0],furthest,0,width-1),height-map(points[i-1][1],0,50,0,height-1),x,y);
+    
+    
+    let newX = map(points[i][0],points[0][0],furthest,0,width-1);
+    let newY = height-map(points[i][1],0,50,0,height-1);
+    let k = ((newX-x)>=0) ^ ((newY-y)>=0);
+    if(k){
+      stroke("white");
     }
+    else stroke("red");
+    line(newX,newY,x,y);
+    x = newX;
+    y = newY;
     
     
   }
   noStroke();
-  fill("#ff87ab");
+  fill("black");
   for(let i=0;i<points.length;i++){
     let x = map(points[i][0],points[0][0],furthest,0,width-1);
     let y = height-map(points[i][1],0,50,0,height-1);
