@@ -29,14 +29,19 @@ const cfg = fs.readFile("config.json", "utf-8", (err, jsonString)=>{
 
 
 let hostname = '104.248.227.135';
-if(myArgs[0]=="-l")hostname='127.0.0.1';
+if(myArgs[0]=="-l"){
+  hostname='127.0.0.1';
+  port = 3000;
+}
 app.use(express.static('public'));
 io.on('connection', (socket)=>{
+  console.log(`New user connected. ID:${socket.id}`);
   balls.forEach((ball)=>{
     socket.emit('new ball', ball);
   });
   socket.emit('load chart',points)
   socket.on('new ball', (ball)=>{
+    console.log(`New heart added by ${socket.id}. Text:${ball[3]}.`);
     balls.push(ball);
     points.push([Date.now(),balls.length]);
     fs.writeFile('config.json',JSON.stringify({blls:balls,pts:points}), err =>{
