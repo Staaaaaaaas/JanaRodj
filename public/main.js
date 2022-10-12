@@ -5,6 +5,7 @@ let friction = -0.9;
 let balls = [];
 let points = [];
 let cnv;
+let pressed = true;
 var socket = io();
 function setup() {
   cnv = createCanvas(500, 500);
@@ -41,6 +42,12 @@ function draw() {
   //fill("#ff5d8f");
   //stroke(255);
   //circle(mouseX,mouseY,10);
+}
+function mousePressed(){
+  pressed = true;
+}
+function mouseReleased(){
+  pressed = false;
 }
 function addBall(){
   let bx = select("#msgBox").elt;
@@ -139,6 +146,13 @@ class Ball {
   }
 
   move() {
+    let dist = (mouseX-this.x)*(mouseX-this.x)+(mouseY-this.y)*(mouseY-this.y);
+    if(dist<=this.diameter*this.diameter && pressed){
+      this.vy = 0;
+      this.x = mouseX;
+      this.y = mouseY;
+      return;
+    }
     this.vy += gravity;
     this.x += this.vx;
     this.y += this.vy;
