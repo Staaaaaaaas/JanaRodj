@@ -6,9 +6,13 @@ let balls = [];
 let points = [];
 let cnv;
 let pressed = false;
-var socket = io();
+let socket = io();
+let inpt;
+
+
 function setup() {
   cnv = createCanvas(500, 500);
+  inpt = select("#msgBox");
   //frameRate(30);
 //   for (let i = 0; i < numBalls; i++) {
 //     balls[i] = new Ball(
@@ -49,8 +53,13 @@ function mousePressed(){
 function mouseReleased(){
   pressed = false;
 }
+function keyPressed(){
+  if(keyCode == ENTER){
+    addBall();
+  }
+}
 function addBall(){
-  let bx = select("#msgBox").elt;
+  let bx = inpt.elt;
   if(!bx.value)return;
   const sz = random(30,50);
   const x = random(width);
