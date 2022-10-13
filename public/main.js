@@ -1,12 +1,14 @@
 let numBalls = 0;
 let spring = 0.05;
-let gravity = 0.1;
-let friction = -0.3;
+let gravity = 0.4;
+let friction = -0.01;
+let selected = -1;
+let flag = 0;
 let balls = [];
 let points = [];
 let cnv;
 let pressed = false;
-const socket = io("http://bfstocks.xyz", {reconnect:false, autoConnect:false});
+const socket = io();
 let inpt;
 
 
@@ -37,11 +39,14 @@ function draw() {
   text(numBalls,width*0.5,height*0.55);
   textSize(14);
   displayChart();
+  flag = 0;
   balls.forEach(ball => {
     ball.collide();
     ball.move();
     ball.display();
   });
+  //console.log(selected, flag);
+  if(flag==0 && pressed && mouseX<=width&&mouseY<=height&&mouseX>0&&mouseY>0)selected=-1;
   //console.log(lastTouched);
   //fill("#ff5d8f");
   //stroke(255);
@@ -70,8 +75,8 @@ function addBall(){
 }
 
 function removeBall(){
-  if(!numBalls)return;
-  socket.emit('kill ball');
+  if(!numBalls || selected<0)return;
+  socket.emit('kill ball', selected);
 }
 
 function displayChart(){
@@ -109,23 +114,31 @@ socket.on('load chart', (newPoints)=>{
   
   points=newPoints;
 });
-socket.on('new ball', (ball)=>{
-  balls.push(new Ball(...ball, numBalls++, balls));
+socket.on('load balls', (newBalls)=>{
+  balls = [];
+  newBalls.forEach(ball=>{
+    balls.push(new Ball(...ball, numBalls++));
+  });
 });
-socket.on('kill ball', ()=>{
-  balls.shift();
+
+socket.on('new ball', (ball)=>{
+  balls.push(new Ball(...ball, numBalls++));
+});
+socket.on('kill ball', (idBall)=>{
+  
+  balls.splice(idBall,1);
   numBalls--;
 });
 
 class Ball {
-  constructor(xin, yin, din, txt, idin, oin) {
+  constructor(xin, yin, din, txt, idin) {
     this.x = xin;
     this.y = yin;
     this.vx = 0;
     this.vy = 0;
     this.diameter = din;
     this.id = idin;
-    this.others = oin;
+    this.others = balls;
     this.txt = txt;
   }
 
@@ -157,10 +170,10 @@ class Ball {
   move() {
     let dist = (mouseX-this.x)*(mouseX-this.x)+(mouseY-this.y)*(mouseY-this.y);
     if(dist<=this.diameter*this.diameter && pressed){
-      this.vy = 0;
-      this.vx = 0;
-      this.x = mouseX;
-      this.y = mouseY;
+      selected=this.id;
+      flag = 1;
+      this.x+=(mouseX-pmouseX);
+      this.y+=(mouseY-pmouseY)
       //lastTouched = this.id;
       this.vx=(mouseX-pmouseX);
       this.vy=(mouseY-pmouseY);
@@ -187,13 +200,20 @@ class Ball {
 
   display() {
     let dist = (mouseX-this.x)*(mouseX-this.x)+(mouseY-this.y)*(mouseY-this.y);
-    if(dist<=this.diameter*this.diameter)fill(255, (Date.now())%256, 171 );
-    else fill("#ff87ab");
-    noStroke();
-    circle(this.x-this.diameter/2.5,this.y,this.diameter);
-    circle(this.x+this.diameter/2.5,this.y,this.diameter);
-    triangle(this.x-this.diameter*0.87,this.y+0.2*this.diameter,this.x+this.diameter*0.87,this.y+0.2*this.diameter,this.x,this.y+1.2*this.diameter);
-      //ellipse(this.x, this.y, this.diameter, this.diameter);
+    if(this.id==selected){
+      stroke(0)
+    }
+    else noStroke();
+    fill("#ff87ab");
+    beginShape();
+    let r = 2*this.diameter/30;
+    for (let a = 0; a<TWO_PI;a+=0.01){
+      let x = r*16*pow(sin(a),3)+this.x;
+      let y = -r*(13*cos(a)-5*cos(2*a)-2*cos(3*a)-cos(4*a))+ this.y;
+      vertex(x,y);
+    }
+    endShape();
+     //ellipse(this.x, this.y, this.diameter, this.diameter);
     if(dist<=this.diameter*this.diameter){
       stroke(0);
       fill(255);

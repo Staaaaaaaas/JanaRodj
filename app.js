@@ -36,9 +36,7 @@ if(myArgs[0]=="-l"){
 app.use(express.static('public'));
 io.on('connection', (socket)=>{
   console.log(`New user connected. ID:${socket.id}`);
-  balls.forEach((ball)=>{
-    socket.emit('new ball', ball);
-  });
+  socket.emit('load balls', balls);
   socket.emit('load chart',points)
   socket.on('new ball', (ball)=>{
     console.log(`New heart added by ${socket.id}. Text:${ball[3]}.`);
@@ -50,14 +48,14 @@ io.on('connection', (socket)=>{
     io.emit('load chart', points);
     io.emit('new ball', ball);
   });
-  socket.on('kill ball', ()=>{
-    balls.shift();
+  socket.on('kill ball', (idBall)=>{
+    balls.splice(idBall,1);
     points.push([Date.now(),balls.length]);
     fs.writeFile('config.json',JSON.stringify({blls:balls,pts:points}), err =>{
       if(err)console.log("eror writing :(");
     });
     io.emit('load chart', points);
-    io.emit('kill ball');
+    io.emit('kill ball', idBall);
   });
 });
 // app.get('/',(req,res)=>{
