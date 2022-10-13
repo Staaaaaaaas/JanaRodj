@@ -5,7 +5,7 @@ const fs=require('fs');
 const server = http.createServer(app);
 const { Server } = require('socket.io');
 const io = new Server(server);
-const port = 80;
+let port = 80;
 const myArgs = process.argv.slice(2);
 
 let balls = [];
