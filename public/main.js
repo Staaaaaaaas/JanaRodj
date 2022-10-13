@@ -6,7 +6,7 @@ let balls = [];
 let points = [];
 let cnv;
 let pressed = false;
-let socket = io();
+const socket = io("http://bfstocks.xyz", {reconnect:false, autoConnect:false});
 let inpt;
 
 
