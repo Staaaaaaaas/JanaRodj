@@ -1,6 +1,6 @@
 let numBalls = 0;
 let spring = 0.05;
-let gravity = 0.4;
+const gravity = 0.4;
 let friction = -0.01;
 let selected = -1;
 let flag = 0;
@@ -11,6 +11,38 @@ let pressed = false;
 const socket = io();
 let inpt;
 
+class Particle{
+  constructor(x,y,angle){
+    this.x = x;
+    this.y = y;
+    let intensity =0.1;
+    this.vx = intensity*16*pow(sin(angle),3);
+    this.vy = -intensity*(13*cos(angle)-5*cos(2*angle)-2*cos(3*angle)-cos(4*angle));
+    this.lifespan = 128;
+  }
+  move(){
+    
+    this.x+=this.vx;
+    this.y+=this.vy;
+    this.lifespan-=2;
+  }
+  display(){
+    fill(255, 135, 171, map(this.lifespan, 0, 128, 0, 255));
+    circle(this.x, this.y, 4);
+  }
+}
+
+function heart(posX, posY, size, clr){
+  fill(clr);
+  beginShape();
+  let r = size;
+  for (let a = 0; a<TWO_PI;a+=0.01){
+    let x = r*16*pow(sin(a),3)+posX;
+    let y = -r*(13*cos(a)-5*cos(2*a)-2*cos(3*a)-cos(4*a))+ posY;
+    vertex(x,y);
+  }
+  endShape();
+}
 
 function setup() {
   cnv = createCanvas(500, 500);
@@ -108,6 +140,7 @@ function displayChart(){
     let x = map(points[i][0],points[0][0],furthest,0,width-1);
     let y = height-map(points[i][1],0,50,0,height-1);
     circle(x,y,5);
+    heart(x, y, 0.25, "black");
   }
 }
 socket.on('load chart', (newPoints)=>{
@@ -126,12 +159,17 @@ socket.on('new ball', (ball)=>{
 });
 socket.on('kill ball', (idBall)=>{
   
+  for(let i=0;i<numBalls;i++){
+    if(i<=idBall)continue;
+    balls[i].id--;
+  }
   balls.splice(idBall,1);
   numBalls--;
 });
 
 class Ball {
   constructor(xin, yin, din, txt, idin) {
+    this.particles = [];
     this.x = xin;
     this.y = yin;
     this.vx = 0;
@@ -140,7 +178,15 @@ class Ball {
     this.id = idin;
     this.others = balls;
     this.txt = txt;
+    this.spawn();
   }
+  spawn(){
+    for(let i=0;i<100;i++){
+      let angle = random(0, 2*PI);
+      this.particles.push(new Particle(this.x, this.y,angle));
+    }
+  }
+  
 
   collide() {
     for (let i = 0; i < numBalls; i++) {
@@ -168,6 +214,13 @@ class Ball {
   }
 
   move() {
+    for(let i=this.particles.length-1;i>0;i--){
+      let p = this.particles[i];
+      p.move();
+      if(p.lifespan < 0){
+        this.particles.splice(i,1);
+      }
+    }
     let dist = (mouseX-this.x)*(mouseX-this.x)+(mouseY-this.y)*(mouseY-this.y);
     if(dist<=this.diameter*this.diameter && pressed){
       selected=this.id;
@@ -199,20 +252,19 @@ class Ball {
   }
 
   display() {
+    noStroke();
+    for(let i=this.particles.length-1;i>0;i--){
+      let p = this.particles[i];
+      
+      p.display();
+    }
     let dist = (mouseX-this.x)*(mouseX-this.x)+(mouseY-this.y)*(mouseY-this.y);
     if(this.id==selected){
       stroke(0)
     }
     else noStroke();
-    fill("#ff87ab");
-    beginShape();
-    let r = 2*this.diameter/30;
-    for (let a = 0; a<TWO_PI;a+=0.01){
-      let x = r*16*pow(sin(a),3)+this.x;
-      let y = -r*(13*cos(a)-5*cos(2*a)-2*cos(3*a)-cos(4*a))+ this.y;
-      vertex(x,y);
-    }
-    endShape();
+    //fill("#ff87ab");
+    heart(this.x, this.y, 2*this.diameter/30,"#ff87ab");
      //ellipse(this.x, this.y, this.diameter, this.diameter);
     if(dist<=this.diameter*this.diameter){
       stroke(0);
