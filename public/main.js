@@ -1,6 +1,6 @@
 let numBalls = 0;
-let spring = 0.05;
-const gravity = 0.6;
+let spring = 0.1;
+const gravity = 0;
 let friction = -0.3;
 let selected = -1;
 let flag = 0;
@@ -60,6 +60,7 @@ function setup() {
   noStroke();
   textSize(14);
   textAlign(CENTER);
+  rectMode(CENTER);
   //noCursor();
 }
 
@@ -139,8 +140,23 @@ function displayChart(){
   for(let i=0;i<points.length;i++){
     let x = map(points[i][0],points[0][0],furthest,0,width-1);
     let y = height-map(points[i][1],0,50,0,height-1);
-    circle(x,y,5);
+    //circle(x,y,5);
     heart(x, y, 0.25, "black");
+  }
+  for(let i=0;i<points.length;i++){
+    let x = map(points[i][0],points[0][0],furthest,0,width-1);
+    let y = height-map(points[i][1],0,50,0,height-1);
+    //circle(x,y,5);
+    if(mouseX>x-5 && mouseX<x+5 && mouseY>y-5 && mouseY<y+5){
+      let dt = new Date(points[i][0]);
+      let dtStr = dt.toDateString().slice(4);
+      let actualX = min(max(x, textWidth(dtStr)/2), width-1-textWidth(dtStr)/2);
+      fill("white");
+      stroke("black");
+      rect(actualX,y-8,textWidth(dtStr)+5, 20, 25);
+      fill("black");
+      text(dtStr,actualX,y-5);
+    }
   }
 }
 socket.on('load chart', (newPoints)=>{
@@ -174,9 +190,9 @@ class Ball {
     this.y = yin;
     this.vx = 0;
     this.vy = 0;
-    this.diameter = din;
+    this.diameter =0.3* din;
     this.id = idin;
-    this.others = balls;
+    //this.others = balls;
     this.txt = txt;
     this.spawn();
   }
@@ -190,12 +206,12 @@ class Ball {
 
   collide() {
     for (let i = 0; i < numBalls; i++) {
-		if(i==this.id)continue;
+      if(i==this.id)continue;
       // console.log(others[i]);
-      let dx = this.others[i].x - this.x;
-      let dy = this.others[i].y - this.y;
+      let dx = balls[i].x - this.x;
+      let dy = balls[i].y - this.y;
       let distance = sqrt(dx * dx + dy * dy);
-      let minDist = this.others[i].diameter / 2 + this.diameter / 2;
+      let minDist = balls[i].diameter / 2 + this.diameter / 2;
       //   console.log(distance);
       //console.log(minDist);
       if (distance < minDist) {
@@ -203,12 +219,12 @@ class Ball {
         let angle = atan2(dy, dx);
         let targetX = this.x + cos(angle) * minDist;
         let targetY = this.y + sin(angle) * minDist;
-        let ax = (targetX - this.others[i].x) * spring;
-        let ay = (targetY - this.others[i].y) * spring;
+        let ax = (targetX - balls[i].x) * spring;
+        let ay = (targetY - balls[i].y) * spring;
         this.vx -= ax;
         this.vy -= ay;
-        this.others[i].vx += ax;
-        this.others[i].vy += ay;
+        balls[i].vx += ax;
+        balls[i].vy += ay;
       }
     }
   }
@@ -265,7 +281,6 @@ class Ball {
     else noStroke();
     //fill("#ff87ab");
     heart(this.x, this.y, 2*this.diameter/30,"#ff87ab");
-     //ellipse(this.x, this.y, this.diameter, this.diameter);
     if(dist<=this.diameter*this.diameter){
       stroke(0);
       fill(255);
