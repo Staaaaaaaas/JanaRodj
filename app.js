@@ -7,7 +7,7 @@ const { Server } = require('socket.io');
 const io = new Server(server);
 let port = 80;
 const myArgs = process.argv.slice(2);
-
+const pwd = fs.readFileSync("pwd.txt", "utf-8").slice(0,-1);
 let balls = [];
 let points = [[Date.now(),0]];
 
@@ -52,10 +52,15 @@ io.on('connection', (socket)=>{
     balls.splice(idBall,1);
     points.push([Date.now(),balls.length]);
     fs.writeFile('config.json',JSON.stringify({blls:balls,pts:points}), err =>{
-      if(err)console.log("eror writing :(");
     });
     io.emit('load chart', points);
     io.emit('kill ball', idBall);
+  });
+  socket.on("auth", maybePwd =>{
+    console.log(pwd.length, maybePwd.length);
+    if(maybePwd==pwd){
+      io.emit("access granted");
+    }
   });
 });
 // app.get('/',(req,res)=>{

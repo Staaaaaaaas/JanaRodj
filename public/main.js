@@ -10,7 +10,12 @@ let cnv;
 let pressed = false;
 const socket = io();
 let inpt;
-
+let pwdBox;
+let buttonAdd;
+let buttonRemove;
+let msgLabel;
+let pwdLabel;
+let pwdBtn;
 class Particle{
   constructor(x,y,angle){
     this.x = x;
@@ -43,10 +48,20 @@ function heart(posX, posY, size, clr){
   }
   endShape();
 }
-
+function auth(){
+  let val = pwdBox.value;
+  socket.emit("auth", val);
+  pwdBox.value = "";
+}
 function setup() {
   cnv = createCanvas(500, 500);
-  inpt = select("#msgBox");
+  inpt = select("#msgBox").elt;
+  pwdBox = select("#pwdBox").elt;
+  pwdLabel = select("#pwdLabel").elt;
+  pwdBtn = select("#authBtn").elt;
+  msgLabel = select("#msgLabel").elt;
+  buttonAdd = select("#buttonAdd").elt;
+  buttonRemove = select("#buttonRemove").elt;
   //frameRate(30);
 //   for (let i = 0; i < numBalls; i++) {
 //     balls[i] = new Ball(
@@ -93,17 +108,17 @@ function mouseReleased(){
 }
 function keyPressed(){
   if(keyCode == ENTER){
-    addBall();
+    if(msgBox.style.display=="inline")addBall();
+    else auth();
   }
 }
 function addBall(){
-  let bx = inpt.elt;
-  if(!bx.value)return;
+  if(!inpt.value)return;
   const sz = random(30,50);
   const x = random(width);
   const y = random(height);
-  socket.emit("new ball", [x,y,sz, bx.value]);
-  bx.value = "";
+  socket.emit("new ball", [x,y,sz, inpt.value]);
+  inpt.value = "";
   
 }
 
@@ -124,11 +139,12 @@ function displayChart(){
     
     let newX = map(points[i][0],points[0][0],furthest,0,width-1);
     let newY = height-map(points[i][1],0,50,0,height-1);
-    let k = ((newX-x)>=0) ^ ((newY-y)>=0);
-    if(k){
+    if(newY-y<=0){
       stroke("white");
     }
-    else stroke("red");
+    else{
+      stroke("red");
+    }
     line(newX,newY,x,y);
     x = newX;
     y = newY;
@@ -136,31 +152,37 @@ function displayChart(){
     
   }
   noStroke();
-  fill("black");
   for(let i=0;i<points.length;i++){
-    let x = map(points[i][0],points[0][0],furthest,0,width-1);
-    let y = height-map(points[i][1],0,50,0,height-1);
-    //circle(x,y,5);
-    heart(x, y, 0.25, "black");
+    let newX = map(points[i][0],points[0][0],furthest,0,width-1);
+    let newY = height-map(points[i][1],0,50,0,height-1);
+    heart(newX, newY, 0.25, "black");
   }
   for(let i=0;i<points.length;i++){
-    let x = map(points[i][0],points[0][0],furthest,0,width-1);
-    let y = height-map(points[i][1],0,50,0,height-1);
+    let newX = map(points[i][0],points[0][0],furthest,0,width-1);
+    let newY = height-map(points[i][1],0,50,0,height-1);
     //circle(x,y,5);
-    if(mouseX>x-5 && mouseX<x+5 && mouseY>y-5 && mouseY<y+5){
+    if(mouseX>newX-5 && mouseX<newX+5 && mouseY>newY-5 && mouseY<newY+5){
       let dt = new Date(points[i][0]);
       let dtStr = dt.toDateString().slice(4);
-      let actualX = min(max(x, textWidth(dtStr)/2), width-1-textWidth(dtStr)/2);
+      let actualX = min(max(newX, textWidth(dtStr)/2), width-1-textWidth(dtStr)/2);
       fill("white");
       stroke("black");
-      rect(actualX,y-8,textWidth(dtStr)+5, 20, 25);
+      rect(actualX,newY-8,textWidth(dtStr)+5, 20, 25);
       fill("black");
-      text(dtStr,actualX,y-5);
+      text(dtStr,actualX,newY-5);
     }
   }
 }
+socket.on('access granted',()=>{
+  msgBox.style.display = "inline"; 
+  buttonAdd.style.display = "inline";
+  buttonRemove.style.display = "inline";
+  msgLabel.style.display = "inline";
+  pwdLabel.style.display = "none";
+  pwdBtn.style.display = "none";
+  pwdBox.style.display = "none";
+});
 socket.on('load chart', (newPoints)=>{
-  
   points=newPoints;
 });
 socket.on('load balls', (newBalls)=>{
@@ -190,7 +212,7 @@ class Ball {
     this.y = yin;
     this.vx = 0;
     this.vy = 0;
-    this.diameter =0.3* din;
+    this.diameter =0.5* din;
     this.id = idin;
     //this.others = balls;
     this.txt = txt;

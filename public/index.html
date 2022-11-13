@@ -45,10 +45,13 @@
 		
 	</style>
 	<div class="container">
-		<label for="msg">Message:</label>
-		<input type="text" name="msg" id="msgBox">
-		<button onclick="addBall()">ADD</button>
-		<button onclick="removeBall()">REMOVE</button>
+    <label id="pwdLabel" for="pwd">Password:</label>
+    <input type="text" name="pwd" id="pwdBox">
+    <button id="authBtn" onclick="auth()">LOG IN</button>
+		<label id="msgLabel" for="msg" hidden>Message:</label>
+		<input type="text" name="msg" id="msgBox" style="display:none;">
+    <button onclick="addBall()" id="buttonAdd" style="display:none;">ADD</button>
+    <button onclick="removeBall()" id="buttonRemove" style="display:none;">REMOVE</button>
 	</div>
 	<div class="footer">Poklon mojoj najjacoj devojci Jani za 18 rodjendan. Volim te %3.</div>
 </body>
