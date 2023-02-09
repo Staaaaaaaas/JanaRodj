@@ -54,6 +54,7 @@ function auth(){
   pwdBox.value = "";
 }
 function setup() {
+  strokeJoin(ROUND);
   cnv = createCanvas(500, 500);
   inpt = select("#msgBox").elt;
   pwdBox = select("#pwdBox").elt;
@@ -133,18 +134,11 @@ function displayChart(){
   //console.log(furthest);
   let x = map(points[0][0],points[0][0],furthest,0,width-1);
   let y = height-map(points[0][1],0,50,0,height-1);
+  stroke("white");
+  strokeWeight(3);
   for(let i=1;i<points.length;i++){
-    
-    
-    
     let newX = map(points[i][0],points[0][0],furthest,0,width-1);
     let newY = height-map(points[i][1],0,50,0,height-1);
-    if(newY-y<=0){
-      stroke("white");
-    }
-    else{
-      stroke("red");
-    }
     line(newX,newY,x,y);
     x = newX;
     y = newY;
@@ -166,10 +160,12 @@ function displayChart(){
       let dtStr = dt.toDateString().slice(4);
       let actualX = min(max(newX, textWidth(dtStr)/2), width-1-textWidth(dtStr)/2);
       fill("white");
+      strokeWeight(3);
       stroke("black");
-      rect(actualX,newY-8,textWidth(dtStr)+5, 20, 25);
+      rect(actualX,newY-15,textWidth(dtStr)+8, 20, 25);
       fill("black");
-      text(dtStr,actualX,newY-5);
+      strokeWeight(1);
+      text(dtStr,actualX,newY-10);
     }
   }
 }
@@ -261,6 +257,7 @@ class Ball {
     }
     let dist = (mouseX-this.x)*(mouseX-this.x)+(mouseY-this.y)*(mouseY-this.y);
     if(dist<=this.diameter*this.diameter && pressed){
+      if(selected!=this.id)this.spawn();
       selected=this.id;
       flag = 1;
       this.x+=(mouseX-pmouseX);
@@ -298,12 +295,14 @@ class Ball {
     }
     let dist = (mouseX-this.x)*(mouseX-this.x)+(mouseY-this.y)*(mouseY-this.y);
     if(this.id==selected){
+      strokeWeight(3);
       stroke(0)
     }
     else noStroke();
     //fill("#ff87ab");
     heart(this.x, this.y, 2*this.diameter/30,"#ff87ab");
     if(dist<=this.diameter*this.diameter){
+      strokeWeight(3);
       stroke(0);
       fill(255);
       text(this.txt,this.x,this.y);
